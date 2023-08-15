@@ -6,6 +6,7 @@ recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 recursive-exclude .idea *
 recursive-exclude venv *
+recursive-exclude *.json
 
 # Top-level config
 include MANIFEST.in

@@ -61,7 +61,7 @@ repository = "https://github.com/lukasz-migas/click-groups"
 # tomatoes = "spam:main_tomatoes"
 
 [tool.setuptools_scm]
-write_to = "src/click-groups/_version.py"
+write_to = "src/click_groups/_version.py"
 
 # https://github.com/psf/black
 [tool.black]

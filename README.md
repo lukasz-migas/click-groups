@@ -22,7 +22,7 @@ from click_groups import GroupedGroup
 def cli():
     pass
 
-@cli.command(help_group="Group 1")
+@cli.command(help_group="Group 1", priority=10)
 def command_1():
     """Run a command."""
 
@@ -37,11 +37,45 @@ def command_3():
 @cli.command(help_group="Group 3")
 def command_4():
     """Run a command."""
+
+@cli.command()
+def command_5():
+    """Run a command."""
+
+@click.group(cls=GroupedGroup)
+def command_6():
+    """Run a command."""
+
+cli.add_command(command_6)
+
+@click.group(cls=GroupedGroup)
+def command_7():
+    """Run a command."""
+
+cli.add_command(command_7, help_group="Group 1", priority=0)
 ```
 
 Which will result in:
 ```
+Usage: cli [OPTIONS] COMMAND [ARGS]...
 
+Options:
+  --help  Show this message and exit.
+
+Group 1:
+  command-7  Run a command.
+  command-2  Run a command.
+  command-1  Run a command.
+
+Group 2:
+  command-3  Run a command.
+
+Group 3:
+  command-4  Run a command.
+
+Commands:
+  command-5  Run a command.
+  command-6  Run a command.
 ```
 
 ## Contributing

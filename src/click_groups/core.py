@@ -1,6 +1,8 @@
 """Core functionality."""
 import typing as ty
+
 import click
+
 
 class GroupedGroup(click.Group):
     """Override click group to enable ordering and grouping.
@@ -33,12 +35,28 @@ class GroupedGroup(click.Group):
         return sorted(commands_with_help, key=lambda x: self.priorities[x[0]])
 
     def add_command(
-        self, cmd, name=None, priority=1, help_group: str = "Commands", help_group_priority: ty.Optional[int] = None
+        self,
+        cmd,
+        name=None,
+        priority: ty.Optional[int] = None,
+        help_group: ty.Optional[str] = None,
+        help_group_priority: ty.Optional[int] = None,
     ) -> None:
         """Add command."""
         super().add_command(cmd, name)
-        self.priorities[cmd.name] = priority
-        self.help_groups.setdefault(help_group, []).append(cmd.name)
+        if priority is not None:
+            cmd.priority = priority
+        if help_group is not None:
+            cmd.help_group = help_group
+        if help_group_priority is not None:
+            cmd.help_group_priority = help_group_priority
+        if cmd.name not in self.priorities:
+            self.priorities[cmd.name] = priority if priority is not None else 1
+        if help_group:  # or cmd.name not in self.help_used:
+            help_group = help_group or "Commands"
+            self.help_groups.setdefault(help_group, [])
+            if cmd.name not in self.help_groups[help_group]:
+                self.help_groups[help_group].append(cmd.name)
         if help_group not in self.help_groups_priority:
             self.help_groups_priority[help_group] = help_group_priority or 1
         if help_group_priority is not None:
@@ -47,29 +65,49 @@ class GroupedGroup(click.Group):
     def command(
         self, *args, priority=1, help_group: str = "Commands", help_group_priority: ty.Optional[int] = None, **kwargs
     ) -> ty.Callable:
-        """Behaves the same as `click.Group.command()` except capture a priority for listing command names in help.
-        """
+        """Override command initialization by providing additional attributes."""
         priorities = self.priorities
         help_groups = self.help_groups
         help_groups_priority = self.help_groups_priority
+
         if help_group not in help_groups_priority:
             help_groups_priority[help_group] = help_group_priority or 1
         if help_group_priority is not None:
             self.help_groups_priority[help_group] = help_group_priority
 
         def decorator(f):
-            cmd = super().command(*args, **kwargs)(f)
+            cmd = super(GroupedGroup, self).command(*args, **kwargs)(f)
+            cmd.priority = priority
+            cmd.help_group = help_group
+            cmd.help_group_priority = help_group_priority
             priorities[cmd.name] = priority
             help_groups.setdefault(help_group, []).append(cmd.name)
             return cmd
 
         return decorator
 
+    def _update_extras(self):
+        """Update command information."""
+        for cmd in self.commands.values():
+            priority = cmd.priority if hasattr(cmd, "priority") else 1
+            help_group = cmd.help_group if hasattr(cmd, "help_group") else "Commands"
+            help_group_priority = cmd.help_group_priority if hasattr(cmd, "help_group_priority") else 1
+            if cmd.name not in self.priorities or priority is not None:
+                self.priorities[cmd.name] = priority
+            if help_group:
+                self.help_groups.setdefault(help_group, [])
+                if cmd.name not in self.help_groups[help_group]:
+                    self.help_groups[help_group].append(cmd.name)
+            if help_group not in self.help_groups_priority:
+                self.help_groups_priority[help_group] = help_group_priority or 1
+            if help_group_priority is not None:
+                self.help_groups_priority[help_group] = help_group_priority
+
     def format_commands(self, ctx: click.Context, formatter: click.HelpFormatter) -> None:
         """Format commands."""
+        self._update_extras()
         for help_group in sorted(self.help_groups, key=lambda x: self.help_groups_priority[x]):
             commands = self.help_groups[help_group]
-            # for group, commands in self.help_groups.items():
             rows = []
             for subcommand in commands:
                 cmd = self.get_command(ctx, subcommand)

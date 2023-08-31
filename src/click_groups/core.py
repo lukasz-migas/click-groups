@@ -51,7 +51,7 @@ class GroupedGroup(click.Group):
         if help_group_priority is not None:
             cmd.help_group_priority = help_group_priority
         if cmd.name not in self.priorities:
-            self.priorities[cmd.name] = priority if priority is not None else 1
+            self.priorities[cmd.name] = priority if priority is not None else 100
         if help_group:  # or cmd.name not in self.help_used:
             help_group = help_group or "Commands"
             self.help_groups.setdefault(help_group, [])
@@ -81,7 +81,9 @@ class GroupedGroup(click.Group):
             cmd.help_group = help_group
             cmd.help_group_priority = help_group_priority
             priorities[cmd.name] = priority
-            help_groups.setdefault(help_group, []).append(cmd.name)
+            help_groups.setdefault(help_group, [])
+            if cmd.name not in help_groups[help_group]:
+                help_groups[help_group].append(cmd.name)
             return cmd
 
         return decorator
@@ -99,7 +101,7 @@ class GroupedGroup(click.Group):
                 if cmd.name not in self.help_groups[help_group]:
                     self.help_groups[help_group].append(cmd.name)
             if help_group not in self.help_groups_priority:
-                self.help_groups_priority[help_group] = help_group_priority or 1
+                self.help_groups_priority[help_group] = help_group_priority or 100
             if help_group_priority is not None:
                 self.help_groups_priority[help_group] = help_group_priority
 

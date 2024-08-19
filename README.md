@@ -26,7 +26,7 @@ def cli():
 def command_1():
     """Run a command."""
 
-@cli.command(help_group="Group 1")
+@cli.command(help_group="Group 1", aliases=["cmd2", "2"])
 def command_2():
     """Run a command."""
 

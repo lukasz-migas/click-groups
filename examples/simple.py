@@ -14,7 +14,7 @@ def command_1():
     """Run a command."""
 
 
-@cli.command(help_group="Group 1")
+@cli.command(help_group="Group 1", aliases=["cmd2", "2"])
 def command_2():
     """Run a command."""
 
@@ -47,7 +47,7 @@ def command_7():
     """Run a command."""
 
 
-cli.add_command(command_7, help_group="Group 1", priority=0)
+cli.add_command(command_7, help_group="Group 1", priority=0, aliases=["cmd7", "7"])
 
 if __name__ == "__main__":
     cli()

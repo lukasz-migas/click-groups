@@ -1,4 +1,5 @@
 """Core functionality."""
+
 import typing as ty
 
 import click
@@ -38,7 +39,7 @@ class GroupedGroup(click.Group):
         if command:
             return command
         return None
-    
+
     def resolve_alias(self, cmd_name: str) -> str:
         if cmd_name in self.alias_to_command:
             return self.alias_to_command[cmd_name]
@@ -51,8 +52,10 @@ class GroupedGroup(click.Group):
 
     def sort_commands_with_help(self, commands_with_help: ty.List[ty.Tuple[str, str]]) -> ty.List[ty.Tuple[str, str]]:
         """Sort commands with help."""
-        return sorted(commands_with_help, key=lambda x: self.priorities[x[0] if " (" not in x[0] else x[0].split(" (")[0]])
- 
+        return sorted(
+            commands_with_help, key=lambda x: self.priorities[x[0] if " (" not in x[0] else x[0].split(" (")[0]]
+        )
+
     def add_command(
         self,
         cmd,
@@ -91,20 +94,24 @@ class GroupedGroup(click.Group):
                 self.alias_to_command[alias] = cmd.name
 
     def command(
-        self, *args, priority=1, help_group: str = "Commands", help_group_priority: ty.Optional[int] = None, 
-        aliases: ty.Optional[list[str]] = None, **kwargs
+        self,
+        *args,
+        priority=1,
+        help_group: str = "Commands",
+        help_group_priority: ty.Optional[int] = None,
+        aliases: ty.Optional[list[str]] = None,
+        **kwargs,
     ) -> ty.Callable:
         """Override command initialization by providing additional attributes."""
         priorities = self.priorities
         help_groups = self.help_groups
         help_groups_priority = self.help_groups_priority
-        
 
         aliases = aliases or []
         if help_group not in help_groups_priority:
             help_groups_priority[help_group] = help_group_priority or 1
         if help_group_priority is not None:
-            self.help_groups_priority[help_group] = help_group_priority
+            help_groups_priority[help_group] = help_group_priority
 
         def decorator(f):
             cmd = super(GroupedGroup, self).command(*args, **kwargs)(f)
@@ -121,17 +128,44 @@ class GroupedGroup(click.Group):
                 for alias in aliases:
                     self.alias_to_command[alias] = cmd.name
             return cmd
+
         return decorator
 
+    def group(
+        self,
+        *args,
+        priority=1,
+        help_group: str = "Commands",
+        help_group_priority: ty.Optional[int] = None,
+        aliases: ty.Optional[list[str]] = None,
+        **kwargs,
+    ):
+        """Override group initialization by providing additional attributes."""
+        cls = kwargs.pop("cls", GroupedGroup)
+        priorities = self.priorities
+        help_groups = self.help_groups
+        help_groups_priority = self.help_groups_priority
 
-    def group(self, *args, **kwargs):
-        aliases = kwargs.pop("aliases", [])
-        decorator = super().group(*args, **kwargs)
+        aliases = aliases or []
+        if help_group not in help_groups_priority:
+            help_groups_priority[help_group] = help_group_priority or 1
+        if help_group_priority is not None:
+            help_groups_priority[help_group] = help_group_priority
+
+        decorator = super().group(*args, cls=cls, **kwargs)
         if not aliases:
             return decorator
 
         def _decorator(f):
             cmd = decorator(f)
+            cmd.priority = priority
+            cmd.help_group = help_group
+            cmd.help_group_priority = help_group_priority
+            cmd.aliases = aliases
+            priorities[cmd.name] = priority
+            help_groups.setdefault(help_group, [])
+            if cmd.name not in help_groups[help_group]:
+                help_groups[help_group].append(cmd.name)
             if aliases:
                 self.command_to_alias[cmd.name] = aliases
                 for alias in aliases:
@@ -160,6 +194,11 @@ class GroupedGroup(click.Group):
     def format_commands(self, ctx: click.Context, formatter: click.HelpFormatter) -> None:
         """Format commands."""
         self._update_extras()
+
+        max_len = 0
+        max_len = max(len(cmd) for cmd in self.list_commands(ctx))
+
+        limit = formatter.width - 6 - max_len
         for help_group in sorted(self.help_groups, key=lambda x: self.help_groups_priority[x]):
             commands = self.help_groups[help_group]
             rows = []
@@ -173,7 +212,7 @@ class GroupedGroup(click.Group):
                     aliases = self.command_to_alias[subcommand]
                     aliases = ",".join(sorted(aliases))
                     subcommand = f"{subcommand} ({aliases})"
-                rows.append((subcommand, cmd.get_short_help_str()))
+                rows.append((subcommand, cmd.get_short_help_str(limit)))
 
             if rows:
                 rows = self.sort_commands_with_help(rows)

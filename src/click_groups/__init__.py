@@ -1,4 +1,5 @@
 """Enable grouping and ordering of commands."""
+
 from importlib.metadata import PackageNotFoundError, version
 
 from click_groups.core import GroupedGroup, _click7

@@ -152,7 +152,8 @@ ignore = [
     "setup.py",
     "tests/**/*",
     ".idea/**/*",
-    "_version.py"
+    "_version.py",
+    "renovate.json"
 ]
 
 # https://python-semantic-release.readthedocs.io/en/latest/configuration.html

@@ -1,5 +1,6 @@
 name: CI
 
+
 on:
   push:
     branches:
@@ -73,6 +74,8 @@ jobs:
     needs: test
     if: success() && startsWith(github.ref, 'refs/tags/') && github.event_name != 'schedule'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
@@ -101,6 +104,8 @@ jobs:
     needs: test
     if: success() && startsWith(github.ref, 'refs/tags/') && github.event_name != 'schedule'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
@@ -109,6 +114,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.x"
+        
 
       - name: install
         run: |

@@ -6,6 +6,7 @@ from click.testing import CliRunner
 import click
 from click_groups import GroupedGroup
 
+
 @pytest.fixture(scope="function")
 def runner():
     return CliRunner()
@@ -86,19 +87,23 @@ TEST_MEDIUM_PRIORITY = "Medium priority command.\n"
 TEST_HIGH_PRIORITY = "High priority command.\n"
 TEST_GROUP_PRIORITY = "Sub-command 1.\n"
 
+
 def test_help(runner):
     result = runner.invoke(cli)
     assert result.output == TEST_HELP
+
 
 @pytest.mark.parametrize("alias", ["command-high-priority", "high", "h"])
 def test_high_priority(runner, alias):
     result = runner.invoke(cli, [alias])
     assert result.output == TEST_HIGH_PRIORITY
 
+
 @pytest.mark.parametrize("alias", ["command-medium-priority", "medium", "m"])
 def test_medium_priority(runner, alias):
     result = runner.invoke(cli, [alias])
     assert result.output == TEST_MEDIUM_PRIORITY
+
 
 @pytest.mark.parametrize("alias", ["subcommand-1", "sub1"])
 def test_group_priority(runner, alias):

@@ -196,7 +196,9 @@ class GroupedGroup(click.Group):
         self._update_extras()
 
         max_len = 0
-        max_len = max(len(cmd) for cmd in self.list_commands(ctx))
+        for cmd in self.list_commands(ctx):
+            if cmd:
+                max_len = max(max_len, len(cmd))
 
         limit = formatter.width - 6 - max_len
         for help_group in sorted(self.help_groups, key=lambda x: self.help_groups_priority[x]):
